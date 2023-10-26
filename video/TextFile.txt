@@ -1,0 +1,96 @@
+﻿Для реализации загрузки и отображения видео на сайте, вам понадобится несколько шагов:
+
+1. Создайте модель для видео, которая будет содержать информацию о видео, такую как название, описание, дата загрузки и путь к файлу видео. Например:
+
+public class Video
+{
+    public int Id { get; set; }
+    public string Title { get; set; }
+    public string Description { get; set; }
+    public DateTime UploadDate { get; set; }
+    public string FilePath { get; set; }
+}
+
+
+2. Создайте контроллер, который будет обрабатывать загрузку видео. В методе контроллера вы можете использовать IFormFile для получения файла видео от пользователя и сохранения его на сервере. Например:
+
+public class VideoController : Controller
+{
+    private readonly string _uploadFolderPath = "путь_к_папке_для_сохранения_видео";
+
+    [HttpPost]
+    public async Task<IActionResult> UploadVideo(IFormFile videoFile)
+    {
+        if (videoFile == null || videoFile.Length <= 0)
+        {
+            // Обработка ошибки при отсутствии файла видео
+            return RedirectToAction("Error");
+        }
+
+        // Генерация уникального имени файла
+        var fileName = Guid.NewGuid().ToString() + Path.GetExtension(videoFile.FileName);
+        var filePath = Path.Combine(_uploadFolderPath, fileName);
+
+        // Сохранение файла видео на сервере
+        using (var stream = new FileStream(filePath, FileMode.Create))
+        {
+            await videoFile.CopyToAsync(stream);
+        }
+
+        // Сохранение информации о видео в базе данных
+        var video = new Video
+        {
+            Title = videoFile.FileName,
+            Description = "Описание видео",
+            UploadDate = DateTime.Now,
+            FilePath = filePath
+        };
+
+        // Сохранение видео в базе данных (используйте ваш провайдер базы данных)
+        // dbContext.Videos.Add(video);
+        // dbContext.SaveChanges();
+
+        return RedirectToAction("Index");
+    }
+}
+
+
+3. Создайте представление, где пользователь сможет загрузить видео. В представлении вы можете использовать форму и элемент <input type="file"> для выбора файла видео. Например:
+
+<form method="post" enctype="multipart/form-data" action="/Video/UploadVideo">
+    <input type="file" name="videoFile" accept="video/*" required>
+    <button type="submit">Загрузить видео</button>
+</form>
+
+
+4. Создайте отдельную страницу для отображения списка доступных видео. В этой странице вы можете извлечь список видео из базы данных и отобразить их. Например:
+
+public class HomeController : Controller
+{
+    // dbContext - ваш контекст базы данных
+
+    public IActionResult Index()
+    {
+        var videos = dbContext.Videos.ToList();
+        return View(videos);
+    }
+}
+
+
+@model List<Video>
+
+@foreach (var video in Model)
+{
+    <div>
+        <h3>@video.Title</h3>
+        <p>@video.Description</p>
+        <video width="320" height="240" controls>
+            <source src="@video.FilePath" type="video/mp4">
+            Ваш браузер не поддерживает воспроизведение видео.
+        </video>
+        <a href="@video.FilePath" download>Скачать видео</a>
+    </div>
+}
+
+
+Теперь пользователи смогут загружать видео с компьютера на ваш сайт, а другие пользователи смогут просматривать и скачивать эти видео.

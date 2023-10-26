@@ -1,0 +1,25 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+</div>
+
+
+@model List<Video>
+
+@foreach (var video in Model)
+{
+    <div>
+        <h3>@video.Title</h3>
+        <p>@video.Description</p>
+        <video autoplay muted loop  width="300" height="250" controls src="~/newFolder/@video.Title" type="video/mp4">
+        </video>
+        <a asp-controller="Home" asp-action="DownloadVideo" asp-route-id="@video.Id" download>Скачать видео</a>
+    </div>
+}
+@*
+ <video autoplay muted width="320" height="240" controls src="~/newFolder/2a2f5f37-78fb-444d-aebe-8b5c86757961.mp4" type="video/mp4">
+        </video>*@
